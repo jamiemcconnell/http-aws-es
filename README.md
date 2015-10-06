@@ -17,4 +17,4 @@ var es = require('elasticsearch').Client({
 });
 ```
 
-Pre-configured credentials can be fetched automatically (through AWS's `getCredentials` function) by specifying `getCredentials: true` in the `amazonES` object in place of `accessKey` and `secretKey`. When using `getCredentials`, `getCredentialsTimeout` can be set to configure the length of the timeout for getting credentials (defaults to 3000 ms).
+Pre-configured credentials can be fetched automatically (through AWS's `getCredentials` function) by specifying `getCredentials: true` in the `amazonES` object in place of `accessKey` and `secretKey`.

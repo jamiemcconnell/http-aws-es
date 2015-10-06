@@ -31,9 +31,11 @@ class HttpAmazonESConnector extends HttpConnector {
     super(host, config);
     this.endpoint = new AWS.Endpoint(host.host);
     let c = config.amazonES;
-    _.defaults(c, {getCredentialsTimeout: 3000});
     if (c.getCredentials) {
-      AWS.config.getCredentials(() => {
+      AWS.config.getCredentials((err) => {
+        if (err) {
+          throw err;
+        }
         this.creds = AWS.config.credentials;
       });
     } else {
@@ -118,11 +120,7 @@ class HttpAmazonESConnector extends HttpConnector {
     var signer = new AWS.Signers.V4(request, 'es');
 
     if (this.amazonES.getCredentials && !this.creds) {
-      let wait = 0;
       const waitForCredentials = () => {
-        if (wait >= this.amazonES.getCredentialsTimeout) {
-          return cleanUp(new Error('AWS-ES connector timed out waiting for AWS credentials'));
-        }
         setTimeout(() => {
           if (abort) {
            return;
@@ -133,7 +131,6 @@ class HttpAmazonESConnector extends HttpConnector {
             waitForCredentials();
           }
         }, 100);
-        wait += 100;
       };
       waitForCredentials();
     } else {
