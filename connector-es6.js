@@ -26,13 +26,14 @@ let AWS = require('aws-sdk');
 let HttpConnector = require('elasticsearch/src/lib/connectors/http');
 let _ = require('elasticsearch/src/lib/utils');
 let zlib = require('zlib');
+const LOCALREGION = 'local';
 
 class HttpAmazonESConnector extends HttpConnector {
   constructor(host, config) {
     super(host, config);
     this.endpoint = new AWS.Endpoint(host.host);
     let c = config.amazonES;
-    if (c.getCredentials) {
+    if (c.getCredentials && c.region !== LOCALREGION) {
       AWS.config.getCredentials((err) => {
         if (err) {
           throw err;
@@ -44,6 +45,13 @@ class HttpAmazonESConnector extends HttpConnector {
     } else {
       this.creds = new AWS.Credentials(c.accessKey, c.secretKey);
     }
+
+    if(c.region === LOCALREGION) {
+      this.endpoint.protocol = 'http';
+      this.endpoint.port = 9200;
+      this.creds = new AWS.Credentials('ACCESSKEY-FAKE', 'SECRETKEY-FAKE');
+    }
+
     this.amazonES = c;
   }
 
@@ -123,7 +131,7 @@ class HttpAmazonESConnector extends HttpConnector {
     request.headers['presigned-expires'] = false;
     request.headers['Host'] = this.endpoint.host;
 
-    if (this.amazonES.getCredentials && !this.creds) {
+    if (this.amazonES.getCredentials && !this.creds && this.amazonES.region !== LOCALREGION) {
       const waitForCredentials = () => {
         setTimeout(() => {
           if (abort) {
